@@ -8,8 +8,6 @@ if (!isset($_SESSION["username"])) {
     exit;
 }
 
-// Retrieve the logged-in user's name from the session
-
 // Retrieve database configuration from environment variables
 $servername = getenv('DB_HOST');
 $username = getenv('DB_USERNAME');
@@ -26,29 +24,42 @@ if ($conn->connect_error) {
 }
 
 // Check if the form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
     // Check if all required fields are filled
     if (isset($_POST["title"]) && isset($_POST["description"])) {
-        // Prepare SQL statement to insert a new note into the database
-$title = $_POST["title"];
-$description = $_POST["description"];
-$sql = "INSERT INTO notes (title, description) VALUES (?, ?)";
+        // Prepare SQL statement to insert or update a note in the database
+        $title = $_POST["title"];
+        $description = $_POST["description"];
+        
+        if (isset($_POST["update_id"])) {
+            // Update note
+            $note_id = $_POST["update_id"];
+            $sql = "UPDATE notes SET title = ?, description = ? WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ssi", $title, $description, $note_id);
+        } else {
+            // Insert new note
+            $sql = "INSERT INTO notes (title, description) VALUES (?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param("ss", $title, $description);
+        }
 
-// Prepare and bind parameters
-$stmt = $conn->prepare($sql);
-$stmt->bind_param("ss", $title, $description);
+        // Execute SQL statement
+        if ($stmt->execute()) {
+            echo isset($_POST["update_id"]) ? "Note updated successfully" : "New note added successfully";
+        } else {
+            echo "Error: " . $sql . "<br>" . $conn->error;
+        }
 
-// Execute SQL statement
-if ($stmt->execute()) {
-    echo "New note added successfully";
-} else {
-    echo "Error: " . $sql . "<br>" . $conn->error;
+        // Close statement
+        $stmt->close();
+    }
 }
 
-// Close statement
-$stmt->close();
+// Close database connection
+$conn->close();
+?>
 
-}
 
 // Close database connection
 $conn->close();
