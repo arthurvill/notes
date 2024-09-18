@@ -58,7 +58,7 @@ $conn->close();
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+            background-image: linear-gradient(120deg, #c2e9fb 0%, #c2e9fb 100%);
             background-size: cover;
             background-repeat: no-repeat;
             background-position: center;
