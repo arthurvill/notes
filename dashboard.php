@@ -8,6 +8,8 @@ if (!isset($_SESSION["username"])) {
     exit;
 }
 
+// Retrieve the logged-in user's name from the session
+
 // Retrieve database configuration from environment variables
 $servername = getenv('DB_HOST');
 $username = getenv('DB_USERNAME');
@@ -24,41 +26,33 @@ if ($conn->connect_error) {
 }
 
 // Check if the form is submitted
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
+if ($_SERVER["REQUEST_METHOD"] == "POST") 
     // Check if all required fields are filled
     if (isset($_POST["title"]) && isset($_POST["description"])) {
         // Prepare SQL statement to insert a new note into the database
-        $title = $_POST["title"];
-        $description = $_POST["description"];
-        
-        // Check if we are updating an existing note
-        if (isset($_POST["update_id"]) && !empty($_POST["update_id"])) {
-            $update_id = $_POST["update_id"];
-            $sql = "UPDATE notes SET title=?, description=? WHERE id=?";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ssi", $title, $description, $update_id);
-        } else {
-            $sql = "INSERT INTO notes (title, description) VALUES (?, ?)";
-            $stmt = $conn->prepare($sql);
-            $stmt->bind_param("ss", $title, $description);
-        }
+$title = $_POST["title"];
+$description = $_POST["description"];
+$sql = "INSERT INTO notes (title, description) VALUES (?, ?)";
 
-        // Execute SQL statement
-        if ($stmt->execute()) {
-            echo "Note updated successfully";
-        } else {
-            echo "Error: " . $sql . "<br>" . $conn->error;
-        }
+// Prepare and bind parameters
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("ss", $title, $description);
 
-        // Close statement
-        $stmt->close();
-    }
+// Execute SQL statement
+if ($stmt->execute()) {
+    echo "New note added successfully";
+} else {
+    echo "Error: " . $sql . "<br>" . $conn->error;
+}
+
+// Close statement
+$stmt->close();
+
 }
 
 // Close database connection
 $conn->close();
 ?>
-
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 
@@ -148,22 +142,22 @@ $conn->close();
         margin-right: 10px;
         /* Adjust the distance between icon and text */
     }
-
     .sidebar ul li:hover {
-        background-color: rgba(255, 255, 255, 0.1);
-        /* Adjust the background color on hover */
-        cursor: pointer;
-    }
+    background-color: rgba(255, 255, 255, 0.1);
+    /* Adjust the background color on hover */
+    cursor: pointer;
+}
 
-    .sidebar ul li:hover a {
-        color: white;
-        /* Adjust the text color of anchor tag on hover */
-    }
+.sidebar ul li:hover a {
+    color: white;
+    /* Adjust the text color of anchor tag on hover */
+}
 
-    .sidebar ul li:hover .icon {
-        filter: invert(1);
-        /* Adjust icon color on hover */
-    }
+.sidebar ul li:hover .icon {
+    filter: invert(1);
+    /* Adjust icon color on hover */
+}
+
 
     .wrapper {
         margin: 20px 20px 20px 270px;
@@ -325,186 +319,461 @@ $conn->close();
         position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
+        z-index: 2;
         height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 999;
-    }
-
-    .popup {
-        position: relative;
-        width: 90%;
-        max-width: 600px;
-        height: 300px;
-        background: #fff;
-        border-radius: 8px;
-        transform: translate(-50%, -50%);
-        padding: 30px;
-    }
-
-    .popup .title {
-        font-size: 22px;
-        font-weight: 600;
-        margin-bottom: 15px;
-    }
-
-    .popup textarea {
         width: 100%;
-        height: 100px;
-        border: 1px solid #ddd;
-        padding: 10px;
-        border-radius: 5px;
-        resize: none;
+        background: rgba(0, 0, 0, 0.4);
     }
 
-    .popup button {
-        background: #ff895d;
-        border: none;
-        padding: 10px 20px;
-        color: #fff;
-        font-size: 16px;
-        border-radius: 5px;
-        cursor: pointer;
-        margin-top: 10px;
-    }
-
-    .popup button:hover {
-        background: #e57547;
-    }
-
-    .popup button:active {
-        background: #d05a30;
-    }
-
-    .popup .close {
+    .popup-box .popup {
         position: absolute;
-        top: 15px;
-        right: 20px;
-        font-size: 18px;
+        top: 50%;
+        left: 50%;
+        z-index: 3;
+        width: 100%;
+        max-width: 400px;
+        justify-content: center;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    .popup-box,
+    .popup {
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.25s ease;
+    }
+
+    .popup-box.show,
+    .popup-box.show .popup {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .popup-box.show .popup {
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    .popup .content {
+        border-radius: 20px;
+        background: #fff;
+        width: calc(100% - 15px);
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .content header {
+        padding: 15px 25px;
+        border-bottom: 1px solid #ccc;
+    }
+
+    .content header p {
+        font-size: 20px;
+        font-weight: 500;
+    }
+
+    .content header i {
+        color: #8b8989;
         cursor: pointer;
+        font-size: 23px;
     }
 
-    .popup .close:hover {
-        color: red;
+    .content form {
+        margin: 15px 25px 35px;
     }
 
-    header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
+    .content form .row {
         margin-bottom: 20px;
     }
 
-    header .left {
-        font-size: 24px;
-        font-weight: 600;
-        color: #333;
+    form .row label {
+        font-size: 18px;
+        display: block;
+        margin-bottom: 6px;
     }
 
-    header .right i {
-        font-size: 24px;
-        cursor: pointer;
+    form :where(input, textarea) {
+        height: 50px;
+        width: 100%;
+        outline: none;
+        font-size: 17px;
+        padding: 0 15px;
+        border-radius: 4px;
+        border: 1px solid #999;
     }
+
+    form :where(input, textarea):focus {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.11);
+    }
+
+    form .row textarea {
+        height: 150px;
+        resize: none;
+        padding: 8px 15px;
+    }
+
+    form button {
+        width: 100%;
+        height: 50px;
+        color: #fff;
+        outline: none;
+        border: none;
+        cursor: pointer;
+        font-size: 17px;
+        border-radius: 4px;
+        background: #6A93F8;
+    }
+
+    @media (max-width: 660px) {
+        .wrapper {
+            margin: 15px;
+            gap: 15px;
+            grid-template-columns: repeat(auto-fill, 100%);
+        }
+
+        .popup-box .popup {
+            max-width: calc(100% - 15px);
+        }
+
+        .bottom-content .settings i {
+            font-size: 17px;
+        }
+    }
+
+    .favorite {
+        color: red;
+    }
+
+    .notes-container {
+        display: grid;
+        gap: 25px;
+        grid-template-columns: repeat(auto-fill, 265px);
+        margin-left: 250px;
+        /* Adjusted margin to accommodate the sidebar */
+        padding: 20px;
+    }
+
+    .notes-container .note {
+        height: 250px;
+        border-radius: 5px;
+        padding: 15px 20px 20px;
+        background: #fff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .notes-container .note .details {
+        max-height: 165px;
+        overflow-y: auto;
+    }
+
+    .notes-container .note p {
+        font-size: 22px;
+        font-weight: 500;
+    }
+
+    .notes-container .note span {
+        display: block;
+        color: #575757;
+        font-size: 16px;
+        margin-top: 5px;
+    }
+
+    .notes-container .note .bottom-content {
+        padding-top: 10px;
+        border-top: 1px solid #ccc;
+    }
+
+    .notes-container .bottom-content span {
+        color: #6d6d6d;
+        font-size: 14px;
+    }
+
+    .notes-container .bottom-content .settings {
+        position: relative;
+    }
+
+    .notes-container .bottom-content .settings i {
+        color: #6d6d6d;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .notes-container .settings .menu {
+        z-index: 1;
+        bottom: 0;
+        right: -5px;
+        padding: 5px 0;
+        background: #fff;
+        position: absolute;
+        border-radius: 4px;
+        transform: scale(0);
+        transform-origin: bottom right;
+        box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s ease;
+    }
+
+    .notes-container .settings.show .menu {
+        transform: scale(1);
+    }
+
+    .notes-container .settings .menu li {
+        height: 25px;
+        font-size: 16px;
+        margin-bottom: 2px;
+        padding: 17px 15px;
+        cursor: pointer;
+        box-shadow: none;
+        border-radius: 0;
+        justify-content: flex-start;
+    }
+
+    .notes-container .menu li:last-child {
+        margin-bottom: 0;
+    }
+
+    .notes-container .menu li:hover {
+        background: #f5f5f5;
+    }
+
+    .notes-container .menu li i {
+        padding-right: 8px;
+    }
+
+    .note-it-color {
+        color: white;
+        /* Change this color to your desired color */
+    }
+
+    .header-search-box {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Align items to the right */
+    position: ;
+    top: 0;
+    right: 0;
+    margin: 20px; /* Add some margin to adjust the position */
+
+    }
+
+    .header-search-box input[type="text"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        margin-right: 10px;
+        width: 20%;
+    }
+
+    .header-search-box button {
+    padding: 10px 20px;
+    background-color: #6A93F8;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s; /* Add transition for smooth effect */
+}
+
+.header-search-box button:hover {
+    background-color: #587fcc; /* Change background color on hover */
+    
+}
+
 </style>
 
 <body>
+    <div class="header-search-box">
+        <input type="text" id="searchInput" placeholder="Search...">
+        <button onclick="searchNotes()">Search</button>
+    </div>
     <div class="sidebar">
-        <h1><span>Veri</span>Tech</h1>
+        <h1>Note<span class="note-it-color"><span style="font-family: 'Passion One', sans-serif;">It</span>!</span></h1>
         <ul>
-            <li><a href="dashboard.php"><i class="uil uil-estate"></i>Dashboard</a></li>
-            <li><a href="#"><i class="uil uil-list-ul"></i>Notes</a></li>
-            <li><a href="#"><i class="uil uil-cog"></i>Settings</a></li>
-            <li><a href="logout.php"><i class="uil uil-sign-out-alt"></i>Logout</a></li>
+            <li>
+                <img src="all_notes.png" alt="All Notes Icon" class="icon">
+                <a href="#">All Notes</a>
+            </li>
+            <li>
+                <img src="favorites.png" alt="Favorites Icon" class="icon">
+                <a href="#">Favorites</a>
+            </li>
+            <li>
+                <img src="archive.png" alt="Archive Icon" class="icon">
+                <a href="#">Archive</a>
+            </li>
+            <li>
+                <img src="logout.png" alt="Logout Icon" class="icon">
+                <a href="logout.php">Log out</a>
+            </li>
         </ul>
+        <p style="position: absolute; bottom: 20px; left: 50px; margin: 0; font-size: 20px; color: black;">Hi <?php echo $username; ?>! <br>Welcome Back.</p>
+        <!-- Display the logged-in user's name -->
     </div>
-    <div class="wrapper">
-        <div class="add-box" id="addBox">
-            <div class="icon">
-                <i class="uil uil-plus"></i>
-            </div>
-            <p>Add Note</p>
-        </div>
-        <!-- Sample note box -->
-        <li>
-            <div class="note">
-                <div class="details">
-                    <p>Note Title</p>
-                    <span>Note Description</span>
-                </div>
-                <div class="bottom-content">
-                    <span>Today</span>
-                    <div class="settings">
-                        <i class="uil uil-cog"></i>
-                        <ul class="menu">
-                            <li onclick="updateNote()">Edit</li>
-                            <li>Delete</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </li>
-        <!-- End of sample note box -->
-    </div>
-
-    <!-- Popup -->
-    <div class="popup-box" id="popupBox" style="display: none;">
-        <div class="popup">
-            <div class="close" id="closePopup">&times;</div>
-            <div class="title" id="popupTitle">Add a Note</div>
-            <form action="dashboard.php" method="post">
-                <input type="hidden" id="update_id" name="update_id" value="">
+    <div class="popup-box">
+    <div class="popup">
+        <div class="content">
+            <header>
+                <p>Add Note</p>
+                <i class="uil uil-times"></i>
+            </header>
+            <form action="dashboard.php" method="post"> <!-- Updated action attribute -->
                 <div class="row title">
                     <label>Title</label>
-                    <input type="text" name="title" id="titleInput" spellcheck="false">
+                    <input type="text" name="title" spellcheck="false"> <!-- Added name attribute -->
                 </div>
                 <div class="row description">
                     <label>Description</label>
-                    <textarea name="description" id="descriptionInput" spellcheck="false"></textarea>
+                    <textarea name="description" spellcheck="false"></textarea> <!-- Added name attribute -->
                 </div>
-                <button type="submit" id="submitBtn">Add Note</button>
+                <button type="submit" name="submit" value="Add Note">Add Note</button> <!-- Added name and value for submit button -->
             </form>
         </div>
     </div>
+</div>
 
-    <script>
-        const addBox = document.getElementById('addBox');
-        const popupBox = document.getElementById('popupBox');
-        const closePopup = document.getElementById('closePopup');
-        const popupTitle = document.getElementById('popupTitle');
-        const titleTag = document.getElementById('titleInput');
-        const descTag = document.getElementById('descriptionInput');
-        const submitBtn = document.getElementById('submitBtn');
+    <div class="wrapper">
+        <li class="add-box">
+            <div class="icon"><i class="uil uil-plus"></i></div>
+            <p>Add Note</p> <!-- Changed "Add a new Note" to "Add Note" here -->
+        </li>
+    </div>
+    <div class="notes-container">
+        <!-- Notes will be displayed here -->
+    </div>
+    <script> const addBox = document.querySelector(".add-box"),
+popupBox = document.querySelector(".popup-box"),
+popupTitle = popupBox.querySelector("header p"),
+closeIcon = popupBox.querySelector("header i"),
+titleTag = popupBox.querySelector("input"),
+descTag = popupBox.querySelector("textarea"),
+addBtn = popupBox.querySelector("button");
 
-        let isUpdate = false;
-        let updateId = null;
+const months = ["January", "February", "March", "April", "May", "June", "July",
+              "August", "September", "October", "November", "December"];
+let notes = JSON.parse(localStorage.getItem("notes") || "[]");
+let isUpdate = false, updateId;
 
-        addBox.addEventListener('click', () => {
-            popupBox.style.display = 'block';
-            titleTag.value = '';
-            descTag.value = '';
-            submitBtn.innerText = 'Add Note';
-            popupTitle.innerText = 'Add a Note';
-        });
+addBox.addEventListener("click", () => {
+    popupTitle.innerText = "Add a new Note";
+    addBtn.innerText = "Add Note";
+    popupBox.classList.add("show");
+    document.querySelector("body").style.overflow = "hidden";
+    if(window.innerWidth > 660) titleTag.focus();
+});
 
-        closePopup.addEventListener('click', () => {
-            popupBox.style.display = 'none';
-        });
+closeIcon.addEventListener("click", () => {
+    isUpdate = false;
+    titleTag.value = descTag.value = "";
+    popupBox.classList.remove("show");
+    document.querySelector("body").style.overflow = "auto";
+});
 
-        function updateNote(noteId, title, filterDesc) {
-            let description = filterDesc.replaceAll('<br/>', '\r\n');
-            updateId = noteId;
-            isUpdate = true;
-            addBox.click();
-            titleTag.value = title;
-            descTag.value = description;
-            document.getElementById('update_id').value = noteId; // Set update ID
-            popupTitle.innerText = "Update a Note";
-            submitBtn.innerText = "Update Note";
+function showNotes() {
+    if(!notes) return;
+    document.querySelectorAll(".note").forEach(li => li.remove());
+    notes.forEach((note, id) => {
+        let filterDesc = note.description.replaceAll("\n", '<br/>');
+        let liTag = <li class="note">
+                        <div class="details">
+                            <p>${note.title}</p>
+                            <span>${filterDesc}</span>
+                        </div>
+                        <div class="bottom-content">
+                            <span>${note.date}</span>
+                            <div class="settings">
+                                <i onclick="showMenu(this)" class="uil uil-ellipsis-h"></i>
+                                <ul class="menu">
+                                    <li onclick="updateNote(${id}, '${note.title}', '${filterDesc}')"><i class="uil uil-pen"></i>Edit</li>
+                                    <li onclick="deleteNote(${id})"><i class="uil uil-trash"></i>Delete</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>;
+        addBox.insertAdjacentHTML("afterend", liTag);
+    });
+}
+showNotes();
+
+function showMenu(elem) {
+    elem.parentElement.classList.add("show");
+    document.addEventListener("click", e => {
+        if(e.target.tagName != "I" || e.target != elem) {
+            elem.parentElement.classList.remove("show");
         }
-    </script>
+    });
+}
+
+function deleteNote(noteId) {
+    let confirmDel = confirm("Are you sure you want to delete this note?");
+    if(!confirmDel) return;
+    notes.splice(noteId, 1);
+    localStorage.setItem("notes", JSON.stringify(notes));
+    showNotes();
+}
+
+function updateNote(noteId, title, filterDesc) {
+    let description = filterDesc.replaceAll('<br/>', '\r\n');
+    updateId = noteId;
+    isUpdate = true;
+    addBox.click();
+    titleTag.value = title;
+    descTag.value = description;
+    popupTitle.innerText = "Update a Note";
+    addBtn.innerText = "Update Note";
+}
+
+addBtn.addEventListener("click", e => {
+    e.preventDefault();
+    let title = titleTag.value.trim(),
+    description = descTag.value.trim();
+
+    if(title || description) {
+        let currentDate = new Date(),
+        month = months[currentDate.getMonth()],
+        day = currentDate.getDate(),
+        year = currentDate.getFullYear();
+
+        let noteInfo = {title, description, date: ${month} ${day}, ${year}}
+        if(!isUpdate) {
+            notes.push(noteInfo);
+        } else {
+            isUpdate = false;
+            notes[updateId] = noteInfo;
+        }
+        localStorage.setItem("notes", JSON.stringify(notes));
+        showNotes();
+        closeIcon.click();
+    }
+});
+
+function searchNotes() {
+    const searchInput = document.getElementById("searchInput").value.trim().toLowerCase();
+    const filteredNotes = notes.filter(note => {
+        return note.title.toLowerCase().includes(searchInput);
+    });
+    document.querySelectorAll(".note").forEach(li => li.remove());
+    filteredNotes.forEach((note, id) => {
+        let filterDesc = note.description.replaceAll("\n", '<br/>');
+        let liTag = <li class="note">
+                        <div class="details">
+                            <p>${note.title}</p>
+                            <span>${filterDesc}</span>
+                        </div>
+                        <div class="bottom-content">
+                            <span>${note.date}</span>
+                            <div class="settings">
+                                <i onclick="showMenu(this)" class="uil uil-ellipsis-h"></i>
+                                <ul class="menu">
+                                    <li onclick="updateNote(${id}, '${note.title}', '${filterDesc}')"><i class="uil uil-pen"></i>Edit</li>
+                                    <li onclick="deleteNote(${id})"><i class="uil uil-trash"></i>Delete</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </li>;
+        addBox.insertAdjacentHTML("afterend", liTag);
+    });
+    
+}
+ 
+</script>
 </body>
 
 </html>
