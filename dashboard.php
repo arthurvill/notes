@@ -671,7 +671,7 @@ function showNotes() {
     document.querySelectorAll(".note").forEach(li => li.remove());
     notes.forEach((note, id) => {
         let filterDesc = note.description.replaceAll("\n", '<br/>');
-        let liTag = <li class="note">
+        let liTag = `<li class="note">
                         <div class="details">
                             <p>${note.title}</p>
                             <span>${filterDesc}</span>
@@ -686,7 +686,7 @@ function showNotes() {
                                 </ul>
                             </div>
                         </div>
-                    </li>;
+                    </li>`;
         addBox.insertAdjacentHTML("afterend", liTag);
     });
 }
@@ -731,7 +731,7 @@ addBtn.addEventListener("click", e => {
         day = currentDate.getDate(),
         year = currentDate.getFullYear();
 
-        let noteInfo = {title, description, date: ${month} ${day}, ${year}}
+        let noteInfo = {title, description, date: `${month} ${day}, ${year}`}
         if(!isUpdate) {
             notes.push(noteInfo);
         } else {
@@ -752,7 +752,7 @@ function searchNotes() {
     document.querySelectorAll(".note").forEach(li => li.remove());
     filteredNotes.forEach((note, id) => {
         let filterDesc = note.description.replaceAll("\n", '<br/>');
-        let liTag = <li class="note">
+        let liTag = `<li class="note">
                         <div class="details">
                             <p>${note.title}</p>
                             <span>${filterDesc}</span>
@@ -767,7 +767,7 @@ function searchNotes() {
                                 </ul>
                             </div>
                         </div>
-                    </li>;
+                    </li>`;
         addBox.insertAdjacentHTML("afterend", liTag);
     });
     
