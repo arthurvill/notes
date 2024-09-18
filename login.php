@@ -1,4 +1,7 @@
 <?php
+// Start the session
+session_start();
+
 // Retrieve database configuration from environment variables
 $servername = getenv('DB_HOST');
 $username = getenv('DB_USERNAME');
@@ -21,8 +24,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password = $_POST["password"];
 
     // Fetch hashed password from the database based on the username
-    $sql = "SELECT r_username, r_password FROM register WHERE r_username = '$username'";
-    $result = $conn->query($sql);
+    $sql = "SELECT r_username, r_password FROM register WHERE r_username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows == 1) {
         $row = $result->fetch_assoc();
@@ -44,10 +50,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         header("Location: login.php?error=incorrect_credentials");
         exit;
     }
+    $stmt->close();
 }
 
 $conn->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
